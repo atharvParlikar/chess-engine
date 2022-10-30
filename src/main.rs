@@ -1,6 +1,7 @@
 #![allow(warnings, unused)]
 use chess::*;
-use std::{collections::HashMap, str::FromStr};
+use std::collections::HashMap;
+use std::str::FromStr;
 
 fn evaluate(fen: String) -> i32 {
     let mut eval: i32 = 0;
@@ -68,20 +69,22 @@ fn minimax(position: String, depth: u8, maximisingPlayer: bool) -> i32 {
 }
 
 fn main() {
-    let position = "rnbqkbnr/ppppp1pp/5p2/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1";
-    let mut moves = MoveGen::new_legal(&Board::from_str(position).unwrap());
-    let mut value = -1000000;
-    let mut bestMove:ChessMove = moves.next().unwrap();
+    let position = "rnbqkbnr/ppppp2p/5p2/6p1/4P3/2N5/PPPP1PPP/R1BQKBNR w KQkq g6 0 1".to_string();
+
+    let board = Board::from_str(position.as_str()).unwrap();
+    let mut moves = MoveGen::new_legal(&board);
+    let mut best_move:ChessMove = moves.next().unwrap();
+    let mut value = -100000;
     for mov in moves {
-        let mut game = Game::new_with_board(Board::from_str(position).unwrap());
+        let mut game = Game::new_with_board(board);
         game.make_move(mov);
-        println!("{}", game.current_position());
         let evaluation = minimax(game.current_position().to_string(), 2, false);
         if evaluation > value {
             value = evaluation;
-            bestMove = mov;
+            best_move = mov;
         }
     }
     println!("evaluation: {}", value);
-    println!("move: {}", bestMove);
+    println!("best move: {}", best_move);
+    println!("best minimax eval: {}", minimax(position, 3, true));
 }
