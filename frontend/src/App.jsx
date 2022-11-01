@@ -12,7 +12,9 @@ function App() {
     if (chess.fen() === fen) {
       alert("invalid move");
     }
-    setFen(chess.fen());
+    else {
+      setFen(chess.fen());
+    }
   };
   return (
     <div className="App">
