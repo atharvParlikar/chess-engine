@@ -1,12 +1,21 @@
 import "./App.css";
 import Chessboard from "chessboardjsx";
 import { Chess } from "chess.js";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from 'axios';
 
 const chess = new Chess();
 
 function App() {
   const [fen, setFen] = useState("start");
+  useEffect(() => {
+    const logData = async () => {
+      const data = await axios.get("http://localhost:8000/");
+      console.log(data.data);
+    }
+    logData();
+
+  }, [])
   const handleDrop = (square) => {
     chess.move({ from: square.sourceSquare, to: square.targetSquare });
     if (chess.fen() === fen) {
@@ -27,7 +36,7 @@ function App() {
           setFen(chess.fen());
         }}
       >
-        Undo
+        Click me!
       </button>
     </div>
   );
