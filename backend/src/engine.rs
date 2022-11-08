@@ -2,6 +2,8 @@ use chess::*;
 use std::collections::HashMap;
 use std::str::FromStr;
 
+static mut COUNTER: i32 = 0;
+
 pub fn evaluate(fen: String) -> i32 {
     let mut eval: i32 = 0;
     let fen_pure = fen.split(" ").next().unwrap().to_string();
@@ -24,97 +26,72 @@ pub fn evaluate(fen: String) -> i32 {
     return eval;
 }
 
-pub fn minimax(
-    position: String,
-    depth: u8,
-    maximisingPlayer: bool,
-    mut alpha: i32,
-    mut beta: i32,
-) -> i32 {
+pub fn minimax(position: String, depth: u8, maximising_player: bool) -> i32 {
     if depth == 0 {
+        unsafe {
+            COUNTER += 1;
+        }
         return evaluate(position);
     } else {
-        if maximisingPlayer {
-            let mut value = -100000;
-            let moves = MoveGen::new_legal(&Board::from_str(position.as_str()).unwrap());
+        let board = Board::from_str(position.as_str()).unwrap();
+        let moves = MoveGen::new_legal(&board);
+        if maximising_player {
+            let mut max_eval = -100000;
             for mov in moves {
-                let game = Game::from_str(position.as_str());
-                match game {
-                    Ok(mut g) => {
-                        g.make_move(mov);
-                        let evaluation = minimax(
-                            g.current_position().to_string(),
-                            depth - 1,
-                            false,
-                            alpha,
-                            beta,
-                        );
-                        if evaluation > value {
-                            value = evaluation;
-                        }
-                    }
-                    Err(e) => println!(""),
-                }
-                if alpha > value {
-                    alpha = value;
-                }
-                if alpha >= beta {
-                    return value;
+                let mut game = Game::new_with_board(board);
+                game.make_move(mov);
+                let current_eval = minimax(game.current_position().to_string(), depth - 1, false);
+                if current_eval > max_eval {
+                    max_eval = current_eval;
                 }
             }
-            return value;
+            return max_eval;
         } else {
-            let mut value = 100000;
-            let moves = MoveGen::new_legal(&Board::from_str(position.as_str()).unwrap());
+            let mut min_eval = 100000;
             for mov in moves {
-                let game = Game::from_str(position.as_str());
-                match game {
-                    Ok(mut g) => {
-                        g.make_move(mov);
-                        let evaluation = minimax(
-                            g.current_position().to_string(),
-                            depth - 1,
-                            true,
-                            alpha,
-                            beta,
-                        );
-                        if evaluation < value {
-                            value = evaluation;
-                        }
-                    }
-                    Err(e) => println!(""),
-                };
-                if beta <= value {
-                    beta = value;
-                }
-                if alpha >= beta {
-                    return value;
+                let mut game = Game::new_with_board(board);
+                game.make_move(mov);
+                let current_eval = minimax(game.current_position().to_string(), depth - 1, true);
+                if current_eval < min_eval {
+                    min_eval = current_eval;
                 }
             }
-            return value;
+            return min_eval;
         }
     }
 }
 
-pub fn minimax_genesis(position: String, depth: u8, maximisingPlayer: bool) -> String {
-    let mut board = Board::from_str(position.as_str()).unwrap();
-    let mut moves = MoveGen::new_legal(&board);
-    let mut best_move: ChessMove = moves.next().unwrap();
-    let mut value = -100000;
-    for mov in moves {
-        let mut game = Game::new_with_board(board);
-        game.make_move(mov);
-        let evaluation = minimax(
-            game.current_position().to_string(),
-            depth,
-            false,
-            -100000,
-            100000,
-        );
-        if evaluation > value {
-            value = evaluation;
-            best_move = mov;
-        }
+pub fn test(position: String, depth: u8, maximising_player: bool) {
+    println!(
+        "best eval after {} moves: {}",
+        depth,
+        minimax(position, depth, maximising_player)
+    );
+    unsafe {
+        println!("positions evaluated: {}", COUNTER);
     }
-    return best_move.to_string();
 }
+
+// pub unsafe fn minimax_genesis(position: String, depth: u8, maximising_player: bool) -> String {
+//     let board = Board::from_str(position.as_str()).unwrap();
+//     let mut moves = MoveGen::new_legal(&board);
+//     let mut best_move: ChessMove = moves.next().unwrap();
+//     let mut value = -100000;
+//     for mov in moves {
+//         let mut game = Game::new_with_board(board);
+//         game.make_move(mov);
+//         let evaluation = minimax(
+//             game.current_position().to_string(),
+//             depth,
+//             maximising_player,
+//             -100000,
+//             100000,
+//         );
+//         if evaluation > value {
+//             value = evaluation;
+//             best_move = mov;
+//         }
+//     }
+//     println!("number of positions evaluated: {}", COUNTER);
+//     return best_move.to_string();
+// }
