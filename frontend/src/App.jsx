@@ -3,6 +3,8 @@ import Chessboard from "chessboardjsx";
 import { Chess } from "chess.js";
 import { useEffect, useState } from "react";
 import axios from 'axios';
+import { ReactNotifications, Store } from 'react-notifications-component'
+import 'react-notifications-component/dist/theme.css'
 
 const chess = new Chess();
 
@@ -16,10 +18,26 @@ function App() {
     logData();
 
   }, [])
+
+
+
   const handleDrop = (square) => {
     chess.move({ from: square.sourceSquare, to: square.targetSquare });
     if (chess.fen() === fen) {
-      alert("invalid move");
+      Store.addNotification({
+        title: "Invalid move",
+        message: `move: ${square.sourceSquare}${square.targetSquare} is invalid...`,
+        type: "danger",
+        insert: "top",
+        container: "top-right",
+        animationIn: ["animate__animated", "animate__fadeIn"],
+        animationOut: ["animate__animated", "animate__fadeOut"],
+        dismiss: {
+          duration: 2000,
+          onScreen: true
+        }
+      });
+      return "snapback";
     }
     else {
       setFen(chess.fen());
@@ -27,6 +45,7 @@ function App() {
   };
   return (
     <div className="App">
+      <ReactNotifications />
       <div className="board">
         <Chessboard width={400} position={fen} onDrop={handleDrop} />
       </div>
@@ -36,7 +55,7 @@ function App() {
           setFen(chess.fen());
         }}
       >
-        Click me!
+        Undo
       </button>
     </div>
   );
